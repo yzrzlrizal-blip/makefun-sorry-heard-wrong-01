@@ -14,17 +14,28 @@ LINE = (
     "so your 400 favourites are gone. They were mostly jazz anyway."
 )
 
+MAX_CHARS = 140
+
+
+def validate(text: str) -> str:
+    """Return the entry line, raising ValueError unless it fits the gate."""
+    if not (1 <= len(text) <= MAX_CHARS):
+        raise ValueError(f"entry must be 1-{MAX_CHARS} chars, got {len(text)}")
+    if text != text.strip() or "\n" in text or "\r" in text:
+        raise ValueError("entry must be a single non-blank line")
+    if any(ord(ch) < 32 for ch in text):
+        raise ValueError("entry must not contain control characters")
+    return text
+
 
 def main() -> int:
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     path = os.path.join(out_dir, "entry.txt")
 
-    text = LINE
-    if not (1 <= len(text) <= 140):
-        print(f"entry must be 1-140 chars, got {len(text)}", file=sys.stderr)
-        return 1
-    if text != text.strip() or "\n" in text:
-        print("entry must be a single non-blank line", file=sys.stderr)
+    try:
+        text = validate(LINE)
+    except ValueError as exc:
+        print(f"invalid entry: {exc}", file=sys.stderr)
         return 1
     data = text.encode("utf-8")
     data.decode("utf-8")  # raises if not valid UTF-8
